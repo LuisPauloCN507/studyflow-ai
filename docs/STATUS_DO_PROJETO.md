@@ -1,0 +1,1 @@
+- **Front-end:** Instalação limpa do Next.js e estrutura de pastas concluídas.
