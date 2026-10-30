@@ -1,1 +1,2 @@
 - **Front-end:** Instalação limpa do Next.js e estrutura de pastas concluídas.
+- **Dashboard:** Layout principal e Cards de estatísticas criados e renderizados com sucesso.
