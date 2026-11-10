@@ -1,3 +1,4 @@
 - **Front-end:** Instalação limpa do Next.js e estrutura de pastas concluídas.
 - **Dashboard:** Layout principal e Cards de estatísticas criados e renderizados com sucesso.
 - **Tarefas:** Página interativa concluída (Adicionar, Concluir e Remover tarefas com React State).
+- **Objetivos:** Página interativa concluída com cartões de metas e troféus.
