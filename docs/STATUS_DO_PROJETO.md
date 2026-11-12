@@ -2,3 +2,4 @@
 - **Dashboard:** Layout principal e Cards de estatísticas criados e renderizados com sucesso.
 - **Tarefas:** Página interativa concluída (Adicionar, Concluir e Remover tarefas com React State).
 - **Objetivos:** Página interativa concluída com cartões de metas e troféus.
+- **Planos IA:** Interface visual concluída com simulação de carregamento.
