@@ -1,6 +1,7 @@
 "use client";
 
 import { StatsCard } from "@/components/ui/StatsCard";
+import { StudyChart } from "@/components/ui/StudyChart";
 import { CheckSquare, Clock, Target, Flame } from "lucide-react";
 import { useStudyStore } from "@/store/useStudyStore";
 import { useEffect, useState } from "react";
@@ -35,9 +36,7 @@ export default function Home() {
         <StatsCard title="Ofensiva (Dias)" value="7" icon={<Flame className="w-5 h-5" />} trend="Fogo não apaga!" trendUp={true} />
       </div>
       
-      <div className="mt-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100 min-h-[300px] flex items-center justify-center border-dashed">
-        <p className="text-gray-400">Área reservada para o Gráfico de Desempenho (Próxima etapa)</p>
-      </div>
+      <StudyChart />
     </div>
   );
 }
