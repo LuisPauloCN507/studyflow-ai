@@ -5,3 +5,4 @@
 - **Planos IA:** Interface visual concluída com simulação de carregamento.
 - **Estado Global:** Zustand configurado com persistência no LocalStorage e conectado ao Dashboard.
 - **Gráficos:** Gráfico de barras semanal implementado no Dashboard com Recharts.
+- **Back-end API:** Servidor Node.js/Express com TypeScript e banco SQLite configurado para CRUD de tarefas.
