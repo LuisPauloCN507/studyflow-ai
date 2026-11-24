@@ -5,26 +5,24 @@ import { Plus, Trash2, CheckSquare, Square } from "lucide-react";
 import { useStudyStore } from "@/store/useStudyStore";
 
 export default function TarefasPage() {
-  const { tarefas, adicionarTarefa, alternarTarefa, removerTarefa } = useStudyStore();
+  const { tarefas, carregando, carregarTarefas, adicionarTarefa, alternarTarefa, removerTarefa } = useStudyStore();
   const [novaTarefa, setNovaTarefa] = useState("");
-  const [mounted, setMounted] = useState(false);
 
-  // Evita erros visuais de carregamento inicial
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    carregarTarefas();
+  }, [carregarTarefas]);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (novaTarefa.trim() === "") return;
-    adicionarTarefa(novaTarefa);
+    await adicionarTarefa(novaTarefa);
     setNovaTarefa("");
   };
-
-  if (!mounted) return <div className="p-8 text-center text-gray-500">A carregar os seus dados...</div>;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Gestão de Tarefas</h2>
-        <p className="text-gray-500 mt-1">Organize os seus estudos e mantenha o foco.</p>
+        <p className="text-gray-500 mt-1">Sincronizado em tempo real com o banco SQLite.</p>
       </div>
 
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-3">
@@ -46,7 +44,9 @@ export default function TarefasPage() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        {tarefas.length === 0 ? (
+        {carregando && tarefas.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">A carregar tarefas do servidor...</div>
+        ) : tarefas.length === 0 ? (
           <div className="p-8 text-center text-gray-500">Nenhuma tarefa pendente. Excelente trabalho!</div>
         ) : (
           <ul className="divide-y divide-gray-100">

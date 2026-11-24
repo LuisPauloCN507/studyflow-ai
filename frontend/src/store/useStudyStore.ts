@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
 export interface Tarefa {
   id: number;
@@ -9,25 +8,69 @@ export interface Tarefa {
 
 interface StudyState {
   tarefas: Tarefa[];
-  adicionarTarefa: (texto: string) => void;
-  alternarTarefa: (id: number) => void;
-  removerTarefa: (id: number) => void;
+  carregando: boolean;
+  carregarTarefas: () => Promise<void>;
+  adicionarTarefa: (texto: string) => Promise<void>;
+  alternarTarefa: (id: number) => Promise<void>;
+  removerTarefa: (id: number) => Promise<void>;
 }
 
-export const useStudyStore = create<StudyState>()(
-  persist(
-    (set) => ({
-      tarefas: [],
-      adicionarTarefa: (texto) => set((state) => ({
-        tarefas: [...state.tarefas, { id: Date.now(), texto, concluida: false }]
-      })),
-      alternarTarefa: (id) => set((state) => ({
-        tarefas: state.tarefas.map(t => t.id === id ? { ...t, concluida: !t.concluida } : t)
-      })),
-      removerTarefa: (id) => set((state) => ({
-        tarefas: state.tarefas.filter(t => t.id !== id)
-      })),
-    }),
-    { name: "studyflow-storage" } // O nome do "cofre" no navegador
-  )
-);
+const API_URL = "http://localhost:3333";
+
+export const useStudyStore = create<StudyState>((set) => ({
+  tarefas: [],
+  carregando: false,
+
+  carregarTarefas: async () => {
+    set({ carregando: true });
+    try {
+      const res = await fetch(`${API_URL}/tarefas`);
+      const dados = await res.json();
+      set({ tarefas: dados, carregando: false });
+    } catch (erro) {
+      console.error("Erro ao carregar tarefas:", erro);
+      set({ carregando: false });
+    }
+  },
+
+  adicionarTarefa: async (texto) => {
+    try {
+      const res = await fetch(`${API_URL}/tarefas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texto }),
+      });
+      const nova = await res.json();
+      set((state) => ({ tarefas: [...state.tarefas, nova] }));
+    } catch (erro) {
+      console.error("Erro ao adicionar tarefa:", erro);
+    }
+  },
+
+  alternarTarefa: async (id) => {
+    try {
+      const res = await fetch(`${API_URL}/tarefas/${id}`, {
+        method: "PATCH",
+      });
+      const atualizada = await res.json();
+      set((state) => ({
+        tarefas: state.tarefas.map((t) => (t.id === id ? atualizada : t)),
+      }));
+    } catch (erro) {
+      console.error("Erro ao atualizar tarefa:", erro);
+    }
+  },
+
+  removerTarefa: async (id) => {
+    try {
+      await fetch(`${API_URL}/tarefas/${id}`, {
+        method: "DELETE",
+      });
+      set((state) => ({
+        tarefas: state.tarefas.filter((t) => t.id !== id),
+      }));
+    } catch (erro) {
+      console.error("Erro ao remover tarefa:", erro);
+    }
+  },
+}));

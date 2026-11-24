@@ -4,14 +4,14 @@ import { StatsCard } from "@/components/ui/StatsCard";
 import { StudyChart } from "@/components/ui/StudyChart";
 import { CheckSquare, Clock, Target, Flame } from "lucide-react";
 import { useStudyStore } from "@/store/useStudyStore";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export default function Home() {
-  const [mounted, setMounted] = useState(false);
-  const tarefas = useStudyStore((state) => state.tarefas);
+  const { tarefas, carregarTarefas } = useStudyStore();
 
-  useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
+  useEffect(() => {
+    carregarTarefas();
+  }, [carregarTarefas]);
 
   const concluidas = tarefas.filter(t => t.concluida).length;
   const total = tarefas.length;
@@ -28,7 +28,7 @@ export default function Home() {
           title="Tarefas Concluídas" 
           value={`${concluidas}/${total}`} 
           icon={<CheckSquare className="w-5 h-5" />} 
-          trend={total > 0 ? "A ler dados reais!" : "Sem tarefas"}
+          trend={total > 0 ? "Sincronizado com SQLite" : "Sem tarefas"}
           trendUp={true}
         />
         <StatsCard title="Horas de Foco" value="4h 30m" icon={<Clock className="w-5 h-5" />} trend="+1h vs ontem" trendUp={true} />
