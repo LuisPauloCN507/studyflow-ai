@@ -14,6 +14,13 @@ db.exec(`
     titulo TEXT NOT NULL,
     concluido INTEGER NOT NULL DEFAULT 0
   );
+
+  CREATE TABLE IF NOT EXISTS planos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    assunto TEXT NOT NULL,
+    etapas TEXT NOT NULL,
+    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 export default db;

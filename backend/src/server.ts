@@ -20,6 +20,39 @@ interface ObjetivoRow {
   concluido: number;
 }
 
+interface PlanoRow {
+  id: number;
+  assunto: string;
+  etapas: string;
+  criado_em: string;
+}
+
+function gerarRoteiroEstruturado(assunto: string) {
+  const tema = assunto.trim();
+  return [
+    {
+      semana: "Semana 1",
+      titulo: `Fundamentos e Arquitetura de ${tema}`,
+      descricao: `Configuracao do ambiente, conceitos essenciais, sintaxe base e leitura da documentacao oficial de ${tema}.`,
+    },
+    {
+      semana: "Semana 2",
+      titulo: `Pratica Guiada com ${tema}`,
+      descricao: `Construcao de pequenos exercicios isolados e resolucao de problemas comuns envolvendo ${tema}.`,
+    },
+    {
+      semana: "Semana 3",
+      titulo: `Projeto Real Aplicado`,
+      descricao: `Desenvolvimento de uma aplicacao funcional integrando ${tema} com boas praticas e controle de versao no Git.`,
+    },
+    {
+      semana: "Semana 4",
+      titulo: `Revisao, Testes e Deploy`,
+      descricao: `Refatoracao de codigo, revisao dos pontos criticos de ${tema} e publicacao do projeto no portfolio.`,
+    },
+  ];
+}
+
 app.get("/", (req, res) => {
   res.json({ status: "online", projeto: "StudyFlow AI API" });
 });
@@ -101,6 +134,43 @@ app.delete("/objetivos/:id", (req, res) => {
   const { id } = req.params;
   const info = db.prepare("DELETE FROM objetivos WHERE id = ?").run(id);
   if (info.changes === 0) return res.status(404).json({ erro: "Objetivo nao encontrado." });
+  res.status(204).send();
+});
+
+// --- ROTAS DE PLANOS IA ---
+app.get("/planos", (req, res) => {
+  const rows = db.prepare("SELECT * FROM planos ORDER BY id DESC").all() as PlanoRow[];
+  res.json(rows.map((row) => ({
+    id: row.id,
+    assunto: row.assunto,
+    etapas: JSON.parse(row.etapas),
+    criado_em: row.criado_em,
+  })));
+});
+
+app.post("/planos/gerar", (req, res) => {
+  const { assunto } = req.body;
+  if (!assunto || typeof assunto !== "string" || assunto.trim() === "") {
+    return res.status(400).json({ erro: "O assunto de estudo e obrigatorio." });
+  }
+
+  const etapas = gerarRoteiroEstruturado(assunto);
+  const info = db.prepare("INSERT INTO planos (assunto, etapas) VALUES (?, ?)").run(
+    assunto.trim(),
+    JSON.stringify(etapas)
+  );
+
+  res.status(201).json({
+    id: Number(info.lastInsertRowid),
+    assunto: assunto.trim(),
+    etapas,
+  });
+});
+
+app.delete("/planos/:id", (req, res) => {
+  const { id } = req.params;
+  const info = db.prepare("DELETE FROM planos WHERE id = ?").run(id);
+  if (info.changes === 0) return res.status(404).json({ erro: "Plano nao encontrado." });
   res.status(204).send();
 });
 

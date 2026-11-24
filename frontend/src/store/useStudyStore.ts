@@ -12,10 +12,24 @@ export interface Objetivo {
   concluido: boolean;
 }
 
+export interface PlanoEtapa {
+  semana: string;
+  titulo: string;
+  descricao: string;
+}
+
+export interface PlanoEstudo {
+  id: number;
+  assunto: string;
+  etapas: PlanoEtapa[];
+}
+
 interface StudyState {
   tarefas: Tarefa[];
   objetivos: Objetivo[];
+  planos: PlanoEstudo[];
   carregando: boolean;
+  gerandoPlano: boolean;
   carregarTarefas: () => Promise<void>;
   adicionarTarefa: (texto: string) => Promise<void>;
   alternarTarefa: (id: number) => Promise<void>;
@@ -24,6 +38,9 @@ interface StudyState {
   adicionarObjetivo: (titulo: string) => Promise<void>;
   alternarObjetivo: (id: number) => Promise<void>;
   removerObjetivo: (id: number) => Promise<void>;
+  carregarPlanos: () => Promise<void>;
+  gerarPlano: (assunto: string) => Promise<void>;
+  removerPlano: (id: number) => Promise<void>;
 }
 
 const API_URL = "http://localhost:3333";
@@ -31,7 +48,9 @@ const API_URL = "http://localhost:3333";
 export const useStudyStore = create<StudyState>((set) => ({
   tarefas: [],
   objetivos: [],
+  planos: [],
   carregando: false,
+  gerandoPlano: false,
 
   carregarTarefas: async () => {
     set({ carregando: true });
@@ -134,6 +153,48 @@ export const useStudyStore = create<StudyState>((set) => ({
       }));
     } catch (erro) {
       console.error("Erro ao remover objetivo:", erro);
+    }
+  },
+
+  carregarPlanos: async () => {
+    try {
+      const res = await fetch(`${API_URL}/planos`);
+      const dados = await res.json();
+      set({ planos: dados });
+    } catch (erro) {
+      console.error("Erro ao carregar planos:", erro);
+    }
+  },
+
+  gerarPlano: async (assunto) => {
+    set({ gerandoPlano: true });
+    try {
+      const res = await fetch(`${API_URL}/planos/gerar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assunto }),
+      });
+      const novoPlano = await res.json();
+      set((state) => ({
+        planos: [novoPlano, ...state.planos],
+        gerandoPlano: false,
+      }));
+    } catch (erro) {
+      console.error("Erro ao gerar plano:", erro);
+      set({ gerandoPlano: false });
+    }
+  },
+
+  removerPlano: async (id) => {
+    try {
+      await fetch(`${API_URL}/planos/${id}`, {
+        method: "DELETE",
+      });
+      set((state) => ({
+        planos: state.planos.filter((p) => p.id !== id),
+      }));
+    } catch (erro) {
+      console.error("Erro ao remover plano:", erro);
     }
   },
 }));

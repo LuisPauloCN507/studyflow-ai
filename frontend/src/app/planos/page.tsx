@@ -1,22 +1,28 @@
 "use client";
 
-import { useState } from "react";
-import { Sparkles, Bot, Loader2, BookOpen } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Sparkles, Bot, Loader2, BookOpen, PlusCircle, Trash2, Check } from "lucide-react";
+import { useStudyStore } from "@/store/useStudyStore";
 
 export default function PlanosPage() {
+  const { planos, gerandoPlano, carregarPlanos, gerarPlano, removerPlano, adicionarTarefa } = useStudyStore();
   const [assunto, setAssunto] = useState("");
-  const [gerando, setGerando] = useState(false);
-  const [planoGerado, setPlanoGerado] = useState(false);
+  const [etapaAdicionada, setEtapaAdicionada] = useState<string | null>(null);
 
-  const gerarPlano = () => {
+  useEffect(() => {
+    carregarPlanos();
+  }, [carregarPlanos]);
+
+  const handleGerar = async () => {
     if (assunto.trim() === "") return;
-    setGerando(true);
-    
-    // Simula o tempo de resposta de uma Inteligência Artificial
-    setTimeout(() => {
-      setGerando(false);
-      setPlanoGerado(true);
-    }, 2500);
+    await gerarPlano(assunto);
+    setAssunto("");
+  };
+
+  const handleEnviarParaTarefas = async (chave: string, textoTarefa: string) => {
+    await adicionarTarefa(textoTarefa);
+    setEtapaAdicionada(chave);
+    setTimeout(() => setEtapaAdicionada(null), 2000);
   };
 
   return (
@@ -26,7 +32,7 @@ export default function PlanosPage() {
           <Sparkles className="w-6 h-6 text-indigo-600" />
           Gerador de Planos com IA
         </h2>
-        <p className="text-gray-500 mt-1">Diga o que quer aprender e a IA monta o seu roteiro de estudos.</p>
+        <p className="text-gray-500 mt-1">Gere roteiros estruturados, salve no banco e envie etapas direto para suas tarefas.</p>
       </div>
 
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
@@ -35,52 +41,84 @@ export default function PlanosPage() {
           <textarea 
             value={assunto}
             onChange={(e) => setAssunto(e.target.value)}
-            placeholder="Ex: Quero aprender os fundamentos de Node.js e criar uma API REST..."
+            placeholder="Ex: Docker e deploy de aplicacoes Node.js na AWS..."
             className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-h-[100px] resize-none"
           />
         </div>
         
         <button 
-          onClick={gerarPlano}
-          disabled={gerando || assunto.trim() === ""}
+          onClick={handleGerar}
+          disabled={gerandoPlano || assunto.trim() === ""}
           className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
         >
-          {gerando ? (
+          {gerandoPlano ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              A processar com IA...
+              Gerando roteiro no servidor...
             </>
           ) : (
             <>
               <Bot className="w-5 h-5" />
-              Gerar Plano de Estudos
+              Gerar e Salvar Plano de Estudos
             </>
           )}
         </button>
       </div>
 
-      {/* Área de Resultado Simulado */}
-      {planoGerado && (
-        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-6 space-y-4 animate-in fade-in duration-500">
-          <div className="flex items-center gap-2 text-indigo-800 font-semibold text-lg">
-            <BookOpen className="w-5 h-5" />
-            Roteiro Sugerido
-          </div>
-          <div className="space-y-3">
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-indigo-50">
-              <h4 className="font-medium text-gray-900">Semana 1: Fundamentos</h4>
-              <p className="text-gray-600 text-sm mt-1">Conceitos básicos, sintaxe e primeiros passos.</p>
+      {/* Lista de Planos Salvos no Banco */}
+      <div className="space-y-6">
+        {planos.map((plano) => (
+          <div key={plano.id} className="bg-indigo-50/70 border border-indigo-100 rounded-xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-indigo-900 font-semibold text-lg">
+                <BookOpen className="w-5 h-5 text-indigo-600" />
+                Roteiro: {plano.assunto}
+              </div>
+              <button 
+                onClick={() => removerPlano(plano.id)}
+                className="text-gray-400 hover:text-rose-500 transition-colors p-2"
+                title="Excluir plano"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-indigo-50">
-              <h4 className="font-medium text-gray-900">Semana 2: Prática e Projetos</h4>
-              <p className="text-gray-600 text-sm mt-1">Criação de um projeto prático aplicando o conhecimento adquirido.</p>
+
+            <div className="space-y-3">
+              {plano.etapas.map((etapa, idx) => {
+                const chave = `${plano.id}-${idx}`;
+                const foiAdicionada = etapaAdicionada === chave;
+                return (
+                  <div key={idx} className="bg-white p-4 rounded-lg shadow-sm border border-indigo-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
+                        {etapa.semana}
+                      </span>
+                      <h4 className="font-medium text-gray-900">{etapa.titulo}</h4>
+                      <p className="text-gray-600 text-sm mt-1">{etapa.descricao}</p>
+                    </div>
+                    <button
+                      onClick={() => handleEnviarParaTarefas(chave, `[${plano.assunto}] ${etapa.titulo}`)}
+                      className="shrink-0 text-xs font-medium px-3 py-2 rounded-lg border border-indigo-200 text-indigo-700 hover:bg-indigo-50 flex items-center gap-1.5 transition-colors"
+                    >
+                      {foiAdicionada ? (
+                        <>
+                          <Check className="w-4 h-4 text-emerald-600" />
+                          <span className="text-emerald-700">Enviada!</span>
+                        </>
+                      ) : (
+                        <>
+                          <PlusCircle className="w-4 h-4" />
+                          Enviar para Tarefas
+                        </>
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
-          <p className="text-xs text-center text-indigo-400 mt-4">
-            *(Nota: Esta é uma simulação visual. A ligação real à IA será feita na fase do Backend)*
-          </p>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 }
