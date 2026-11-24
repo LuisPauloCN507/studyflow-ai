@@ -1,33 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Target, Plus, Trash2, Trophy } from "lucide-react";
-
-interface Objetivo {
-  id: number;
-  titulo: string;
-  concluido: boolean;
-}
+import { useStudyStore } from "@/store/useStudyStore";
 
 export default function ObjetivosPage() {
-  const [objetivos, setObjetivos] = useState<Objetivo[]>([
-    { id: 1, titulo: "Terminar o curso de HTML5 e CSS3 do Guanabara", concluido: false },
-    { id: 2, titulo: "Dominar comandos do Git e GitLab", concluido: true },
-  ]);
+  const { objetivos, carregarObjetivos, adicionarObjetivo, alternarObjetivo, removerObjetivo } = useStudyStore();
   const [novoObjetivo, setNovoObjetivo] = useState("");
 
-  const adicionarObjetivo = () => {
+  useEffect(() => {
+    carregarObjetivos();
+  }, [carregarObjetivos]);
+
+  const handleAdd = async () => {
     if (novoObjetivo.trim() === "") return;
-    setObjetivos([...objetivos, { id: Date.now(), titulo: novoObjetivo, concluido: false }]);
+    await adicionarObjetivo(novoObjetivo);
     setNovoObjetivo("");
-  };
-
-  const alternarStatus = (id: number) => {
-    setObjetivos(objetivos.map(o => o.id === id ? { ...o, concluido: !o.concluido } : o));
-  };
-
-  const deletarObjetivo = (id: number) => {
-    setObjetivos(objetivos.filter(o => o.id !== id));
   };
 
   return (
@@ -37,21 +25,20 @@ export default function ObjetivosPage() {
           <Target className="w-6 h-6 text-indigo-600" />
           Meus Objetivos
         </h2>
-        <p className="text-gray-500 mt-1">Defina metas claras para a sua jornada de desenvolvimento.</p>
+        <p className="text-gray-500 mt-1">Defina metas claras sincronizadas com o banco de dados.</p>
       </div>
 
-      {/* Área de Novo Objetivo */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-3">
         <input 
           type="text" 
           value={novoObjetivo}
           onChange={(e) => setNovoObjetivo(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && adicionarObjetivo()}
-          placeholder="Ex: Dominar Next.js até o fim do mês..." 
+          onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+          placeholder="Ex: Dominar Next.js e Node.js até o fim do mês..." 
           className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
         />
         <button 
-          onClick={adicionarObjetivo}
+          onClick={handleAdd}
           className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
         >
           <Plus className="w-5 h-5" />
@@ -59,31 +46,36 @@ export default function ObjetivosPage() {
         </button>
       </div>
 
-      {/* Grade de Objetivos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {objetivos.map((objetivo) => (
-          <div key={objetivo.id} className={`p-5 rounded-xl border ${objetivo.concluido ? "bg-emerald-50 border-emerald-200" : "bg-white border-gray-100 shadow-sm"} flex flex-col justify-between gap-4 transition-all`}>
-            <div className="flex justify-between items-start">
-              <h3 className={`font-medium ${objetivo.concluido ? "text-emerald-700 line-through" : "text-gray-800"}`}>
-                {objetivo.titulo}
-              </h3>
-              <Trophy className={`w-5 h-5 ${objetivo.concluido ? "text-emerald-500" : "text-gray-300"}`} />
+      {objetivos.length === 0 ? (
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center text-gray-500">
+          Nenhum objetivo cadastrado ainda. Adicione a sua primeira meta acima!
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {objetivos.map((objetivo) => (
+            <div key={objetivo.id} className={`p-5 rounded-xl border ${objetivo.concluido ? "bg-emerald-50 border-emerald-200" : "bg-white border-gray-100 shadow-sm"} flex flex-col justify-between gap-4 transition-all`}>
+              <div className="flex justify-between items-start">
+                <h3 className={`font-medium ${objetivo.concluido ? "text-emerald-700 line-through" : "text-gray-800"}`}>
+                  {objetivo.titulo}
+                </h3>
+                <Trophy className={`w-5 h-5 ${objetivo.concluido ? "text-emerald-500" : "text-gray-300"}`} />
+              </div>
+              
+              <div className="flex justify-between items-center mt-2 pt-4 border-t border-gray-100/50">
+                <button 
+                  onClick={() => alternarObjetivo(objetivo.id)} 
+                  className={`text-sm font-medium px-3 py-1 rounded-md transition-colors ${objetivo.concluido ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                >
+                  {objetivo.concluido ? "Concluído" : "Marcar como Concluído"}
+                </button>
+                <button onClick={() => removerObjetivo(objetivo.id)} className="text-gray-400 hover:text-rose-500 transition-colors p-2">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            
-            <div className="flex justify-between items-center mt-2 pt-4 border-t border-gray-100/50">
-              <button 
-                onClick={() => alternarStatus(objetivo.id)} 
-                className={`text-sm font-medium px-3 py-1 rounded-md transition-colors ${objetivo.concluido ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
-              >
-                {objetivo.concluido ? "Concluído" : "Marcar como Concluído"}
-              </button>
-              <button onClick={() => deletarObjetivo(objetivo.id)} className="text-gray-400 hover:text-rose-500 transition-colors p-2">
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

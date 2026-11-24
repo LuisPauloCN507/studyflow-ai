@@ -6,19 +6,31 @@ export interface Tarefa {
   concluida: boolean;
 }
 
+export interface Objetivo {
+  id: number;
+  titulo: string;
+  concluido: boolean;
+}
+
 interface StudyState {
   tarefas: Tarefa[];
+  objetivos: Objetivo[];
   carregando: boolean;
   carregarTarefas: () => Promise<void>;
   adicionarTarefa: (texto: string) => Promise<void>;
   alternarTarefa: (id: number) => Promise<void>;
   removerTarefa: (id: number) => Promise<void>;
+  carregarObjetivos: () => Promise<void>;
+  adicionarObjetivo: (titulo: string) => Promise<void>;
+  alternarObjetivo: (id: number) => Promise<void>;
+  removerObjetivo: (id: number) => Promise<void>;
 }
 
 const API_URL = "http://localhost:3333";
 
 export const useStudyStore = create<StudyState>((set) => ({
   tarefas: [],
+  objetivos: [],
   carregando: false,
 
   carregarTarefas: async () => {
@@ -71,6 +83,57 @@ export const useStudyStore = create<StudyState>((set) => ({
       }));
     } catch (erro) {
       console.error("Erro ao remover tarefa:", erro);
+    }
+  },
+
+  carregarObjetivos: async () => {
+    try {
+      const res = await fetch(`${API_URL}/objetivos`);
+      const dados = await res.json();
+      set({ objetivos: dados });
+    } catch (erro) {
+      console.error("Erro ao carregar objetivos:", erro);
+    }
+  },
+
+  adicionarObjetivo: async (titulo) => {
+    try {
+      const res = await fetch(`${API_URL}/objetivos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ titulo }),
+      });
+      const novo = await res.json();
+      set((state) => ({ objetivos: [...state.objetivos, novo] }));
+    } catch (erro) {
+      console.error("Erro ao adicionar objetivo:", erro);
+    }
+  },
+
+  alternarObjetivo: async (id) => {
+    try {
+      const res = await fetch(`${API_URL}/objetivos/${id}`, {
+        method: "PATCH",
+      });
+      const atualizado = await res.json();
+      set((state) => ({
+        objetivos: state.objetivos.map((o) => (o.id === id ? atualizado : o)),
+      }));
+    } catch (erro) {
+      console.error("Erro ao atualizar objetivo:", erro);
+    }
+  },
+
+  removerObjetivo: async (id) => {
+    try {
+      await fetch(`${API_URL}/objetivos/${id}`, {
+        method: "DELETE",
+      });
+      set((state) => ({
+        objetivos: state.objetivos.filter((o) => o.id !== id),
+      }));
+    } catch (erro) {
+      console.error("Erro ao remover objetivo:", erro);
     }
   },
 }));

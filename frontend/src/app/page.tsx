@@ -7,14 +7,16 @@ import { useStudyStore } from "@/store/useStudyStore";
 import { useEffect } from "react";
 
 export default function Home() {
-  const { tarefas, carregarTarefas } = useStudyStore();
+  const { tarefas, objetivos, carregarTarefas, carregarObjetivos } = useStudyStore();
 
   useEffect(() => {
     carregarTarefas();
-  }, [carregarTarefas]);
+    carregarObjetivos();
+  }, [carregarTarefas, carregarObjetivos]);
 
   const concluidas = tarefas.filter(t => t.concluida).length;
-  const total = tarefas.length;
+  const totalTarefas = tarefas.length;
+  const objetivosAtivos = objetivos.filter(o => !o.concluido).length;
 
   return (
     <div className="space-y-6">
@@ -26,13 +28,19 @@ export default function Home() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard 
           title="Tarefas Concluídas" 
-          value={`${concluidas}/${total}`} 
+          value={`${concluidas}/${totalTarefas}`} 
           icon={<CheckSquare className="w-5 h-5" />} 
-          trend={total > 0 ? "Sincronizado com SQLite" : "Sem tarefas"}
+          trend={totalTarefas > 0 ? "Sincronizado com SQLite" : "Sem tarefas"}
           trendUp={true}
         />
         <StatsCard title="Horas de Foco" value="4h 30m" icon={<Clock className="w-5 h-5" />} trend="+1h vs ontem" trendUp={true} />
-        <StatsCard title="Objetivos Ativos" value="3" icon={<Target className="w-5 h-5" />} />
+        <StatsCard 
+          title="Objetivos Ativos" 
+          value={String(objetivosAtivos)} 
+          icon={<Target className="w-5 h-5" />}
+          trend={`${objetivos.length} no total`}
+          trendUp={true}
+        />
         <StatsCard title="Ofensiva (Dias)" value="7" icon={<Flame className="w-5 h-5" />} trend="Fogo não apaga!" trendUp={true} />
       </div>
       
