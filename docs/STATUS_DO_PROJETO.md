@@ -7,3 +7,4 @@
 - **Gráficos:** Gráfico de barras semanal implementado no Dashboard com Recharts.
 - **Back-end API:** Servidor Node.js/Express com TypeScript e banco SQLite configurado para CRUD de tarefas.
 - **Integração Full-Stack:** Front-end conectado à API Node.js/SQLite para persistência real de tarefas.
+- **Objetivos Full-Stack:** Tabela SQLite, rotas CRUD na API e contagem real de objetivos ativos no Dashboard.
